@@ -16,6 +16,8 @@
     <select v-model="position">
         <option value="">Select your position</option>
         <option value="UTG">UTG (Under The Gun)</option>
+        <option value="MP">MP </option>
+        <option value="CO">CO (Cut Off)</option>
         <option value="BTN">BTN (Button)</option>
     </select>
 
@@ -25,6 +27,12 @@
         <button @click="makeDecision('raise')">Raise</button>
         <button @click="makeDecision('fold')">Fold</button>
     </div>
+	<div>
+    <h3>Correct Answers: {{ correctCount }}</h3>
+    <h3>Incorrect Answers: {{ incorrectCount }}</h3>
+    <h3>Accuracy Rate: {{ accuracyRate }}</h3>
+    <button @click="resetStats">Reset Stats</button>
+</div>
     <h3 v-if="feedback">{{ feedback }}</h3>
 </div>
 
@@ -36,13 +44,26 @@
                     position: '',
                     cards: [],
                     feedback: '',
+					correctCount: 0,
+        incorrectCount: 0,
                     ranges: {
-                        UTG: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'AK'],
-                        BTN: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'T9s', '98s', '87s', '76s', '65s', '54s']
+                        UTG: ['AA', 'KK', 'QQ', 'JJ', 'TT','99','88','77','66','55','44', 'AKs', 'AQs', 'AJs', 'ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s', 'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s', 'QJs','QTs','Q9s','Q8s','JTs','T9s','98s','87s','76s','65s','54s','AK','AQ','AJ','AT','KQ','KJ','KT','QJ','QT'],
+                        MP: ['AA', 'KK', 'QQ', 'JJ', 'TT','99','88','77','66','55','44','33','22', 'AKs', 'AQs', 'AJs', 'ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s', 'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s', 'QJs','QTs','Q9s','Q8s','Q6s','Q5s','JTs','J9s','T9s','98s','87s','76s','65s','54s','AK','AQ','AJ','AT','A9','A5','KQ','KJ','KT','QJ','QT','JT'],
+                        CO: ['AA', 'KK', 'QQ', 'JJ', 'TT','99','88','77','66','55','44','33','22', 'AKs', 'AQs', 'AJs', 'ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s', 'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s', 'QJs','QTs','Q9s','Q8s','Q6s','Q5s','JTs','J9s','J8s','J7s','T9s','T8s','98s','97s','87s','76s','65s','54s','AK','AQ','AJ','AT','A9','A8','A7','A5','KQ','KJ','KT','K9','QJ','QT','JT','J9'],
+                        BTN: ['AA', 'KK', 'QQ', 'JJ', 'TT','99','88','77','66','55','44','33','22', 'AKs', 'AQs', 'AJs', 'ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s', 'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s', 'QJs','QTs','Q9s','Q8s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','T9s','T8s','T7s','T6s','98s','97s','96s','87s','86s','76s','75s','65s','54s','AK','AQ','AJ','AT','A9','A8','A7','A6','A5','A4','A3','KQ','KJ','KT','K9','K8','K7','QJ','QT','Q9','Q8','JT','J9','J8','T9','T8','98'],
                     }
                 };
-            },
-            methods: {
+            },computed: {
+    accuracyRate() {
+        const total = this.correctCount + this.incorrectCount;
+        return total > 0 ? ((this.correctCount / total) * 100).toFixed(2) + '%' : '0%';
+    }
+},
+            methods: { resetStats() {
+        this.correctCount = 0;
+        this.incorrectCount = 0;
+        this.feedback = '';
+    },
                 dealCards() {  const suits = ['♠', '♥', '♦', '♣'];
         const suitsClass = ['spade', 'heart', 'diamond', 'club'];  // CSS类名
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -70,7 +91,15 @@
     console.log("Allowed Hands for", this.position, ":", this.ranges[this.position]);
 
     const correctAction = this.ranges[this.position].includes(formattedHand) ? 'raise' : 'fold';
-    this.feedback = action === correctAction ? 'Correct decision!' : 'Wrong decision!';
+    
+    if (action === correctAction) {
+        this.feedback = 'Correct decision!';
+        this.correctCount += 1;  // 增加正确计数
+    } else {
+        this.feedback = 'Wrong decision!';
+        this.incorrectCount += 1;  // 增加错误计数
+    }
+ 
 },formatHand(cards) {
     const rankOrder = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 
