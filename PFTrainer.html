@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Preflop Trainer</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+	<style>
+    .heart, .diamond { color: red; }
+    .spade, .club { color: black; }
+</style>
+</head>
+<body>
+   <div id="app">
+    <h2>Poker Preflop Trainer</h2>
+    <select v-model="position">
+        <option value="">Select your position</option>
+        <option value="UTG">UTG (Under The Gun)</option>
+        <option value="BTN">BTN (Button)</option>
+    </select>
+
+    <button @click="dealCards" v-if="position">Deal Cards</button>
+    <div v-if="cards.length">
+        <h3>Your cards: <span v-html="cards.join(' ')"></span></h3>
+        <button @click="makeDecision('raise')">Raise</button>
+        <button @click="makeDecision('fold')">Fold</button>
+    </div>
+    <h3 v-if="feedback">{{ feedback }}</h3>
+</div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    position: '',
+                    cards: [],
+                    feedback: '',
+                    ranges: {
+                        UTG: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'AK'],
+                        BTN: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'T9s', '98s', '87s', '76s', '65s', '54s']
+                    }
+                };
+            },
+            methods: {
+                dealCards() {  const suits = ['♠', '♥', '♦', '♣'];
+        const suitsClass = ['spade', 'heart', 'diamond', 'club'];  // CSS类名
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        this.cards = [];
+        let cardCount = 0;
+
+        while (cardCount < 2) {
+            const suitIndex = Math.floor(Math.random() * suits.length);
+            const suit = suits[suitIndex];
+            const value = values[Math.floor(Math.random() * values.length)];
+            const card = `<span class="${suitsClass[suitIndex]}">${value}${suit}</span>`;
+
+            // 确保不重复发牌
+            if (!this.cards.some(c => c.includes(value + suit))) {
+                this.cards.push(card);
+                cardCount++;
+            }
+        }
+
+        this.feedback = '';
+                },
+          makeDecision(action) {
+    const formattedHand = this.formatHand(this.cards);
+    console.log("Formatted Hand:", formattedHand); // 输出看看具体是什么
+    console.log("Allowed Hands for", this.position, ":", this.ranges[this.position]);
+
+    const correctAction = this.ranges[this.position].includes(formattedHand) ? 'raise' : 'fold';
+    this.feedback = action === correctAction ? 'Correct decision!' : 'Wrong decision!';
+},formatHand(cards) {
+    const rankOrder = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+
+    // 去除HTML标签后提取等级和花色
+    const extractCardInfo = (cardHtml) => {
+        const rank = cardHtml.replace(/<[^>]*>/g, '').slice(0, -1).replace("10", "T");  // 转换"10"为"T"
+        const suit = cardHtml.replace(/<[^>]*>/g, '').slice(-1);
+        return { rank, suit };
+    };
+
+    const card1 = extractCardInfo(cards[0]);
+    const card2 = extractCardInfo(cards[1]);
+
+    // 排序以确保格式正确
+    let sorted = [card1, card2].sort((a, b) => rankOrder.indexOf(b.rank) - rankOrder.indexOf(a.rank));
+    const isSuited = sorted[0].suit === sorted[1].suit ? 's' : '';
+
+    return sorted[0].rank + sorted[1].rank + isSuited;  // 返回纯文本格式的牌
+}
+            }
+        });
+    </script>
+</body>
+</html>
